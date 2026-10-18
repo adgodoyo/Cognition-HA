@@ -1,0 +1,11 @@
+# Mock ledger: fictional customers. Money is integer cents.
+# Dates are relative (captured_days_ago) and resolved when the demo is seeded.
+transactions:
+  - {id: TX-1001, customer: Laura Hill, email: laura.hill@example.com, amount_cents: 12000,  status: settled,  captured_days_ago: 5,   refunded_cents: 0}
+  - {id: TX-1002, customer: Dan King,   email: dan.king@example.com,   amount_cents: 48000,  status: settled,  captured_days_ago: 20,  refunded_cents: 0}
+  - {id: TX-1003, customer: Meg Lane,   email: meg.lane@example.com,   amount_cents: 95000,  status: settled,  captured_days_ago: 8,   refunded_cents: 20000}
+  - {id: TX-1004, customer: John Webb,  email: john.webb@example.com,  amount_cents: 240000, status: settled,  captured_days_ago: 12,  refunded_cents: 0}
+  - {id: TX-1005, customer: Emma Ford,  email: emma.ford@example.com,  amount_cents: 195000, status: settled,  captured_days_ago: 30,  refunded_cents: 0}
+  - {id: TX-1006, customer: Luke Ross,  email: luke.ross@example.com,  amount_cents: 64000,  status: disputed, captured_days_ago: 15,  refunded_cents: 0}
+  - {id: TX-1007, customer: Sara Hart,  email: sara.hart@example.com,  amount_cents: 30000,  status: settled,  captured_days_ago: 120, refunded_cents: 0}
+  - {id: TX-1008, customer: Tom Baker,  email: tom.baker@example.com,  amount_cents: 7500,   status: pending,  captured_days_ago: 1,   refunded_cents: 0}

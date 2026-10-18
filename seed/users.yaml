@@ -1,0 +1,4 @@
+# Demo people. Roles must exist in config/policy.yaml.
+users:
+  - {username: amy, name: Amy Clark, title: Operations analyst, department: Operations, role: ops_analyst}
+  - {username: mark, name: Mark Evans, title: Operations manager, department: Operations, role: ops_manager}

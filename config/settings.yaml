@@ -1,0 +1,25 @@
+# Platform settings. Code reads these; nothing here is duplicated in code.
+platform:
+  name: Internal Tools
+  live_refresh_seconds: 2
+
+identity:
+  provider: mock            # mock | entra_oidc (see core/identity/entra_oidc.py)
+
+storage:
+  data_dir: data
+  platform_db: platform.db  # the platform's own data: users, approvals, signatures, audit
+  ledger_db: ledger.db      # mock external systems: ledger, payouts, settlements
+  seed_dir: seed
+
+# Adding an app: a new folder under apps/, one line here, and its roles in policy.yaml.
+installed_apps:
+  - refunds
+
+apps:
+  refunds:
+    color: teal
+    approver_label: manager
+    elevated_above_cents: 50000      # above $500 needs a signature
+    high_above_cents: 150000         # above $1,500 is high risk
+    refund_window_days: 90

@@ -1,0 +1,6 @@
+# Test-only people (never the demo seed).
+users:
+  - {username: tester_a, name: Test Analyst One, title: Analyst, department: Ops Test, role: ops_analyst}
+  - {username: tester_b, name: Test Analyst Two, title: Analyst, department: Ops Test, role: ops_analyst}
+  - {username: boss_a, name: Test Manager One, title: Manager, department: Ops Test, role: ops_manager}
+  - {username: boss_b, name: Test Manager Two, title: Manager, department: Ops Test, role: ops_manager}

@@ -1,0 +1,20 @@
+# Who may do what. A permission's prefix names the app it belongs to.
+permissions:
+  refunds.request: "Request refunds"
+  refunds.approve: "Approve refunds"
+  audit.read: "View the audit log"
+
+roles:
+  ops_analyst:
+    label: "Operations analyst"
+    permissions: [refunds.request]
+  ops_manager:
+    label: "Operations manager"
+    permissions: [refunds.request, refunds.approve, audit.read]
+
+# What each risk level requires. Signatures are collected in the order listed.
+# Each entry is a signer type registered in core/approvals.py.
+approval_requirements:
+  low: []                   # executes immediately
+  elevated: [app_approver]
+  high: [app_approver]

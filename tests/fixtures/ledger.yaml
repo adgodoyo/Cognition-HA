@@ -1,0 +1,8 @@
+# Test-only ledger (never the demo seed). Money in cents, relative dates.
+transactions:
+  - {id: T-SMALL,    customer: Fixture Small,    email: small@test.invalid,    amount_cents: 30000,  status: settled,  captured_days_ago: 3,   refunded_cents: 0}
+  - {id: T-BIG,      customer: Fixture Big,      email: big@test.invalid,      amount_cents: 300000, status: settled,  captured_days_ago: 10,  refunded_cents: 0}
+  - {id: T-PARTIAL,  customer: Fixture Partial,  email: partial@test.invalid,  amount_cents: 100000, status: settled,  captured_days_ago: 7,   refunded_cents: 40000}
+  - {id: T-PENDING,  customer: Fixture Pending,  email: pending@test.invalid,  amount_cents: 20000,  status: pending,  captured_days_ago: 1,   refunded_cents: 0}
+  - {id: T-DISPUTED, customer: Fixture Disputed, email: disputed@test.invalid, amount_cents: 20000,  status: disputed, captured_days_ago: 4,   refunded_cents: 0}
+  - {id: T-OLD,      customer: Fixture Old,      email: old@test.invalid,      amount_cents: 20000,  status: settled,  captured_days_ago: 200, refunded_cents: 0}
