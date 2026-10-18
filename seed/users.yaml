@@ -3,6 +3,5 @@ users:
   - {username: amy, name: Amy Clark, title: Operations analyst, department: Operations, role: ops_analyst}
   - {username: mark, name: Mark Evans, title: Operations manager, department: Operations, role: ops_manager}
   - {username: sue, name: Sue Turner, title: Compliance officer, department: Compliance, role: compliance_officer}
-  - {username: paul, name: Paul Reed, title: Software engineer, department: Engineering, role: engineer}
+  - {username: paul, name: Paul Reed, title: Engineering lead, department: Engineering, role: eng_lead}
   - {username: kate, name: Kate Hall, title: Engineering lead, department: Engineering, role: eng_lead}
-  - {username: nina, name: Nina Cole, title: Engineering lead, department: Engineering, role: eng_lead}
