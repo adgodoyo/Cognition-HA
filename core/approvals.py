@@ -80,6 +80,15 @@ register_signer_type(
 )
 
 
+register_signer_type(
+    SignerType(
+        key="compliance_cosigner",
+        qualifies=lambda platform, who, app: platform.policy.has(who, "compliance.cosign"),
+        label=lambda platform, app: "compliance",
+    )
+)
+
+
 def validate_signer_types(policy) -> None:
     """Fail fast at startup if policy.yaml names a signer type that doesn't exist."""
     for level, steps in policy.approval_requirements.items():
@@ -240,7 +249,8 @@ def _sign_refusal(platform, principal: Principal, a: Approval) -> PlatformError 
     if principal.username == a.requester:
         return SelfApprovalForbidden(**ctx)
     if a.signed_by(principal.username):
-        return AlreadySigned(**ctx)
+        # Every step needs a different person, even if one role could fill several.
+        return AlreadySigned("You already signed this request; each step needs a different person.", **ctx)
     step = a.next_requirement
     if SIGNER_TYPES[step].qualifies(platform, principal, a.app):
         return None

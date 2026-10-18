@@ -34,3 +34,21 @@ One row per session. Wall-clock and ACUs are filled in by the human reviewer.
   - Reviewer feedback: inboxes looked empty because low-risk refunds execute right away and dropped out of both inboxes. Inboxes now show recent requests and recent decisions.
   - Reviewer feedback: small self-approved refunds could be chained to skip the manager. Added `SelfServeLimit` in `core/approvals.py` (running totals per payment and per person per 24h, from config). Going over escalates the risk instead of blocking.
 - **Assumptions:** see the pull request description.
+
+## Session 2: Compliance co-signing (spine change)
+- **Task:** "High-risk actions in any internal app must also be co-signed by Compliance." Spec saved as `docs/specs/compliance-cosign.md`. Scope: `core/`, `config/`, `seed/`, `tests/`; nothing under `apps/`.
+- **Built:**
+  - `compliance_cosigner` signer type in `core/approvals.py` (holds `compliance.cosign`, any app, label "compliance"). `high: [app_approver, compliance_cosigner]` in `config/policy.yaml`, plus the permission and `compliance_officer` role. Seed user Sue Turner.
+  - Ordered steps, no self-approval, inbox "only at your step" and progress text were already spine behavior; none of it needed changing.
+  - Each step needs a different person: the existing `already_signed` refusal now explains that, and returns 409 instead of 403, as the spec asks ("signing a step twice returns 409").
+  - Platform page: `Policy.permission_groups()` now puts every non-app permission (audit, compliance) in one "Platform" column group. Before, `compliance.cosign` would have shown as a second "Platform" group. The fix is in core, so no template changed.
+- **Files changed:**
+  - `config/policy.yaml`, `seed/users.yaml`
+  - `core/approvals.py`, `core/errors.py`, `core/policy.py`, `core/registry.py`
+  - `tests/fixtures/users.yaml`, `tests/test_compliance_cosign.py` (new)
+  - `docs/specs/compliance-cosign.md` (new), `docs/demo-walkthrough.md` (scene 5), `docs/devin-log.md`
+  - Nothing under `apps/` or `templates/`.
+- **Tests:** `make test` → 72 passed.
+- **Walkthrough:** scene 5 in the browser after a reset: Amy $1,800 on TX-1005 → Mark signs (still pending, nothing paid) → Sue signs from her inbox → paid.
+- **Went wrong / caught:** see the pull request description.
+- **Wall-clock / ACUs:**

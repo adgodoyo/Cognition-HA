@@ -2,3 +2,4 @@
 users:
   - {username: amy, name: Amy Clark, title: Operations analyst, department: Operations, role: ops_analyst}
   - {username: mark, name: Mark Evans, title: Operations manager, department: Operations, role: ops_manager}
+  - {username: sue, name: Sue Turner, title: Compliance officer, department: Compliance, role: compliance_officer}
