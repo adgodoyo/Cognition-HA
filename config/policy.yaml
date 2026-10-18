@@ -2,6 +2,8 @@
 permissions:
   refunds.request: "Request refunds"
   refunds.approve: "Approve refunds"
+  flags.change: "Change feature flags"
+  flags.approve: "Approve production flag changes"
   audit.read: "View the audit log"
   compliance.cosign: "Co-sign high-risk actions in any app"
 
@@ -12,6 +14,12 @@ roles:
   ops_manager:
     label: "Operations manager"
     permissions: [refunds.request, refunds.approve, audit.read]
+  engineer:
+    label: "Software engineer"
+    permissions: [flags.change]
+  eng_lead:
+    label: "Engineering lead"
+    permissions: [flags.change, flags.approve, audit.read]
   compliance_officer:
     label: "Compliance officer"
     permissions: [compliance.cosign, audit.read]

@@ -49,7 +49,7 @@ class MockIdentityProvider:
     # Sign-in chooser (DEMO_MODE only)
 
     def people(self) -> list[Principal]:
-        rows = self.db.query("SELECT * FROM users ORDER BY department, name")
+        rows = self.db.query("SELECT * FROM users ORDER BY department, rowid")  # seed order within a department
         return [principal_from_row(r) for r in rows]
 
     def sign_in(self, request: Request, username: str) -> Principal:

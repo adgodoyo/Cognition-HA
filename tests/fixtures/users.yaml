@@ -6,3 +6,6 @@ users:
   - {username: boss_b, name: Test Manager Two, title: Manager, department: Ops Test, role: ops_manager}
   - {username: cop_a, name: Test Compliance One, title: Compliance, department: Compliance Test, role: compliance_officer}
   - {username: cop_b, name: Test Compliance Two, title: Compliance, department: Compliance Test, role: compliance_officer}
+  - {username: eng_a, name: Test Engineer One, title: Engineer, department: Eng Test, role: engineer}
+  - {username: lead_a, name: Test Lead One, title: Lead, department: Eng Test, role: eng_lead}
+  - {username: lead_b, name: Test Lead Two, title: Lead, department: Eng Test, role: eng_lead}
