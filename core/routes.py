@@ -59,6 +59,9 @@ def _safe_next(target: str | None, default: str) -> str:
     return target if target and target.startswith("/") and not target.startswith("//") else default
 
 
+INBOX_RECENT = 10
+
+
 # Sign-in
 
 @router.get("/signin", include_in_schema=False)
@@ -89,8 +92,10 @@ def signout(request: Request, platform: PlatformContext = Depends(get_platform))
 # Pages
 
 @router.get("/", include_in_schema=False)
-def home(request: Request, principal: Principal = Depends(require_principal),
-         platform: PlatformContext = Depends(get_platform)):
+def home(request: Request, platform: PlatformContext = Depends(get_platform)):
+    principal = optional_principal(request)
+    if principal is None:
+        return render(request, "welcome.html", apps=list(platform.apps.values()))
     tiles = [{"m": m, "open": platform.policy.can_open(principal, m.name)} for m in platform.apps.values()]
     can_sign_any = approvals.can_sign_anything(platform, principal)
     waiting = len(approvals.waiting_for(platform, principal)) if can_sign_any else 0
@@ -103,11 +108,13 @@ def inbox(request: Request, principal: Principal = Depends(require_principal),
           platform: PlatformContext = Depends(get_platform)):
     people = _people(platform)
     waiting = [approval_view(platform, principal, a, people) for a in approvals.waiting_for(platform, principal)]
-    mine = [
-        approval_view(platform, principal, a, people)
-        for a in approvals.list_approvals(platform, requester=principal.username, statuses=("pending", "approved"))
-    ]
-    return render(request, "inbox.html", waiting=waiting, mine=mine)
+    mine = [approval_view(platform, principal, a, people)
+            for a in approvals.list_approvals(platform, requester=principal.username)[:INBOX_RECENT]]
+    decided = [approval_view(platform, principal, a, people)
+               for a in approvals.list_approvals(platform, statuses=("executed", "failed", "rejected"))
+               if approvals.oversees(platform, principal, a.app)][:INBOX_RECENT]
+    return render(request, "inbox.html", waiting=waiting, mine=mine, decided=decided,
+                  oversees_any=approvals.can_sign_anything(platform, principal))
 
 
 @router.get("/audit", include_in_schema=False)

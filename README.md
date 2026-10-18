@@ -9,7 +9,7 @@ Every app declares three things: its **actions**, the **checks** each action nee
 | Identity and roles (demo sign-in, dev tokens, Entra ID stub) | `core/identity/` |
 | Permissions and approval rules (YAML) | `config/policy.yaml`, `core/policy.py` |
 | Checks against systems of record, run again inside the write transaction | `core/verification.py` |
-| Approvals: signer types, ordered signatures, no self-approval, execute once, idempotency | `core/approvals.py` |
+| Approvals: signer types, ordered signatures, no self-approval, execute once, idempotency, self-serve limits (no splitting big actions into small ones) | `core/approvals.py` |
 | Typed connectors (read-only ledger, payment processor mock) | `core/connectors/` |
 | Append-only audit log (enforced by database triggers) | `core/audit.py`, `core/db.py` |
 | App registry and the Platform page | `core/registry.py` |

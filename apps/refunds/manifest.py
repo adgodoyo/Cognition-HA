@@ -18,6 +18,8 @@ def build(settings) -> AppManifest:
         risk_level=lambda payload: service.risk_level(payload, cfg),
         execute=service.execute,
         describe=service.describe,
+        amount=lambda payload: int(payload["amount_cents"]),
+        self_serve_limits=service.self_serve_limits(cfg),
     )
     return AppManifest(
         name=service.APP,

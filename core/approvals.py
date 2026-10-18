@@ -6,6 +6,7 @@ import hashlib
 import json
 import sqlite3
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
 from core import audit
@@ -24,6 +25,7 @@ from core.errors import (
     SelfApprovalForbidden,
 )
 from core.identity.base import Principal
+from core.money import format_cents
 from core.verification import Check, Ctx, build_ctx, run_checks
 
 
@@ -36,6 +38,20 @@ class ActionSpec:
     risk_level: Callable[[dict], str]            # "low" | "elevated" | "high", from the app's config
     execute: Callable[[dict, str, Ctx], dict]    # (payload, idempotency_key, ctx) -> result
     describe: Callable[[dict], str]              # one line for the inbox
+    amount: Callable[[dict], int] | None = None  # cents, for self-serve limits
+    self_serve_limits: list["SelfServeLimit"] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class SelfServeLimit:
+    """Caps the running total of requests that executed without a signature, so a large action
+    can't be split into small ones to skip approval. Going over escalates the risk level."""
+    label: str
+    limit_cents: int
+    window_hours: int | None = None              # None: all time
+    per_requester: bool = False                  # only count this requester's requests
+    group: Callable[[dict], str] | None = None   # only count requests with the same group key
+    escalate_to: str = "elevated"
 
 
 # Signer types: who qualifies for a step, and the short label used in progress text.
@@ -247,6 +263,11 @@ def can_sign_anything(platform, principal: Principal | None) -> bool:
     return any(s.qualifies(platform, principal, app) for s in SIGNER_TYPES.values() for app in platform.apps)
 
 
+def oversees(platform, principal: Principal, app: str) -> bool:
+    """True if the principal qualifies as any signer type for this app."""
+    return any(signer.qualifies(platform, principal, app) for signer in SIGNER_TYPES.values())
+
+
 def waiting_for(platform, principal: Principal) -> list[Approval]:
     return [a for a in list_approvals(platform, statuses=("pending",)) if can_sign(platform, principal, a)[0]]
 
@@ -257,16 +278,50 @@ def _request_hash(app: str, action: str, payload: dict) -> str:
     return hashlib.sha256(json.dumps({"app": app, "action": action, "payload": payload}, sort_keys=True).encode()).hexdigest()
 
 
+def assess_risk(platform, conn: sqlite3.Connection, spec: ActionSpec, principal: Principal,
+                payload: dict) -> tuple[str, str | None]:
+    """The app's risk level, raised when this request would push self-approved totals over a limit."""
+    risk = spec.risk_level(payload)
+    if platform.policy.requirements_for(risk) or not spec.self_serve_limits or spec.amount is None:
+        return risk, None
+    amount = spec.amount(payload)
+    rows = conn.execute(
+        "SELECT payload, requester, created_at FROM approvals WHERE app = ? AND action = ?"
+        " AND requirements = '[]' AND status IN ('approved', 'executed')",
+        (spec.app, spec.name),
+    ).fetchall()
+    now = datetime.now(timezone.utc)
+    for limit in spec.self_serve_limits:
+        since = now - timedelta(hours=limit.window_hours) if limit.window_hours else None
+        prior = 0
+        for row in rows:
+            other = json.loads(row["payload"])
+            if since and datetime.fromisoformat(row["created_at"]) < since:
+                continue
+            if limit.per_requester and row["requester"] != principal.username:
+                continue
+            if limit.group and limit.group(other) != limit.group(payload):
+                continue
+            prior += spec.amount(other)
+        if prior + amount > limit.limit_cents:
+            reason = (f"{limit.label}: {format_cents(prior)} already approved without a signature + "
+                      f"{format_cents(amount)} = {format_cents(prior + amount)}, over the "
+                      f"{format_cents(limit.limit_cents)} limit.")
+            return limit.escalate_to, reason
+    return risk, None
+
+
 def preview(platform, principal: Principal, app: str, action: str, payload: dict) -> dict[str, Any]:
     """Run the checks and report the risk. Writes nothing."""
     spec = platform.action(app, action)
     platform.policy.require(principal, spec.request_permission, app=app, action=f"{action}.preview")
     with platform.db.read() as conn:
         ctx = build_ctx(platform, app, conn)
-    outcomes = run_checks(spec.checks, payload, ctx)
-    risk = spec.risk_level(payload)
+        outcomes = run_checks(spec.checks, payload, ctx)
+        risk, risk_reason = assess_risk(platform, conn, spec, principal, payload)
     requirements = platform.policy.requirements_for(risk)
     return {
+        "risk_reason": risk_reason,
         "checks": [o.to_dict() for o in outcomes],
         "all_passed": all(o.passed for o in outcomes),
         "risk": risk,
@@ -302,7 +357,7 @@ def submit(platform, principal: Principal, app: str, action: str, payload: dict,
                 app=app, action=f"{action}.request",
                 extra={"failed_checks": failed, "description": description, "payload": payload},
             )
-        risk = spec.risk_level(payload)
+        risk, risk_reason = assess_risk(platform, conn, spec, principal, payload)
         requirements = platform.policy.requirements_for(risk)
         now = utcnow_iso()
         cur = conn.execute(
@@ -312,7 +367,7 @@ def submit(platform, principal: Principal, app: str, action: str, payload: dict,
              "pending" if requirements else "approved", principal.username, idempotency_key, request_hash, now, now),
         )
         approval_id = cur.lastrowid
-        detail = {"description": description, "payload": payload, "risk": risk,
+        detail = {"description": description, "payload": payload, "risk": risk, "risk_reason": risk_reason,
                   "needs": needs_text(platform, app, requirements), "checks": [o.to_dict() for o in outcomes]}
         if requirements:
             audit.record(platform.db, actor=principal.username, role=principal.role, app=app,

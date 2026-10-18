@@ -36,6 +36,7 @@
       {% endfor %}
     </table>
     <p><strong>Risk:</strong> <span class="risk-{{ preview.risk }}">{{ preview.risk }}</span>, {{ preview.needs }}.
+      {% if preview.risk_reason %}<br><small class="risk-elevated">Raised from low: {{ preview.risk_reason }}</small><br>{% endif %}
       {% if not preview.all_passed %}<span class="bad">Fix the failed checks to submit.</span>{% endif %}</p>
   </section>
   {% endif %}

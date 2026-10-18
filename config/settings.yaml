@@ -23,3 +23,8 @@ apps:
     elevated_above_cents: 50000      # above $500 needs a signature
     high_above_cents: 150000         # above $1,500 is high risk
     refund_window_days: 90
+    # Refunds that execute without a signature are capped in total, so a big refund can't be
+    # split into small ones. Going over sends the request to a manager.
+    self_serve_limits:
+      per_transaction_cents: 50000     # all self-approved refunds on one payment, ever
+      per_requester_daily_cents: 100000  # one person's self-approved refunds in 24 hours

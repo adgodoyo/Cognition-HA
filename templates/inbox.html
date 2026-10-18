@@ -24,7 +24,7 @@
 </section>
 
 <section id="inbox-mine" data-live>
-  <h3>Your requests in progress</h3>
+  <h3>Your recent requests</h3>
   {% if mine %}
   <table>
     <thead><tr><th>App</th><th>Request</th><th>Risk</th><th>Progress</th><th>Status</th></tr></thead>
@@ -40,6 +40,30 @@
     {% endfor %}
     </tbody>
   </table>
-  {% else %}<p class="muted">You have no requests in progress.</p>{% endif %}
+  {% else %}<p class="muted">You haven't made any requests yet.</p>{% endif %}
 </section>
+
+{% if oversees_any %}
+<section id="inbox-decided" data-live>
+  <h3>Recently decided in apps you approve</h3>
+  <p class="muted"><small>Includes low-risk requests that executed without a signature.</small></p>
+  {% if decided %}
+  <table>
+    <thead><tr><th>App</th><th>Request</th><th>Requester</th><th>Risk</th><th>Progress</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for r in decided %}
+    <tr>
+      <td><span class="apptag" style="background: {{ r.app_color }}">{{ r.app_title }}</span></td>
+      <td>#{{ r.id }} {{ r.description }}</td>
+      <td>{{ r.requester_name }}</td>
+      <td class="risk-{{ r.risk }}">{{ r.risk }}</td>
+      <td>{{ r.progress }}</td>
+      <td><span class="chip {{ r.status }}">{{ r.status_text }}</span></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">Nothing decided yet.</p>{% endif %}
+</section>
+{% endif %}
 {% endblock %}

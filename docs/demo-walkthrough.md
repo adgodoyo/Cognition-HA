@@ -1,6 +1,6 @@
 # Demo walkthrough (about 5 minutes)
 
-Start with `make demo` and open http://localhost:8000. `make demo` resets both databases from `seed/` first, so every run starts the same way. You can also reset any time from the button on the Platform page.
+Start with `make demo` and open http://localhost:8000. Signed out, the home page links to **Sign in** and **Platform**. `make demo` resets both databases from `seed/` first, so every run starts the same way. You can also reset any time from the button on the Platform page.
 
 ## 1. Sign in as Amy (operations analyst)
 - The sign-in page lists the two demo people. Each card shows what that person **can** and **cannot** do. The lists are generated from `config/policy.yaml`.
@@ -16,6 +16,11 @@ Start with `make demo` and open http://localhost:8000. `make demo` resets both d
 - Enter `TX-1001`, `laura.hill@example.com`, `$50`, reason "Damaged item". Click **Check**: all five checks pass, risk is **low**.
 - Click **Submit**. The request is **Executed** right away, because low risk needs no signature. The header counter goes to **Payouts: 1 · $50.00**.
 
+## 3b. Splitting a refund doesn't get around the manager
+- Still as Amy, refund `$300` on `TX-1002` (`dan.king@example.com`), Check → low, Submit → **Executed**.
+- Check another `$300` on `TX-1002`. Risk is **elevated**, with the reason *"Raised from low: Refunds on this payment: $300.00 already approved without a signature + $300.00 = $600.00, over the $500.00 limit."* Submitting sends it to a manager.
+- The limits are in `config/settings.yaml` → `apps.refunds.self_serve_limits`: one cap per payment (counting everyone's requests) and a 24-hour cap per person (counting all payments).
+
 ## 4. A large refund waits for a manager
 - Enter `TX-1004`, `john.webb@example.com`, `$1,200`, reason "Order cancelled". Click **Check**: all checks pass, risk is **elevated** (above $500).
 - Click **Submit**. The status reads **Waiting for manager approval · 0 of 1: manager**.
@@ -26,7 +31,8 @@ Start with `make demo` and open http://localhost:8000. `make demo` resets both d
 
 ## 6. Mark approves
 - **Sign out**, then sign in as **Mark Evans** (operations manager).
-- **Inbox** shows Amy's $1,200 request with its reason, requester, risk, progress (`0 of 1: manager`), and **Sign** / **Reject** buttons.
+- **Inbox** shows Amy's pending requests (the $1,200 one, plus the escalated $300 split) waiting for his signature, and below that, recently decided requests in apps he approves, including Amy's self-approved ones. Amy's own inbox lists her recent requests with their status.
+- The $1,200 request shows with its reason, requester, risk, progress (`0 of 1: manager`), and **Sign** / **Reject** buttons.
 - Click **Sign**. The request runs its checks again inside the write transaction, then executes once. The counter goes to **Payouts: 2 · $1,250.00**. Amy's open tabs update within a few seconds.
 
 ## 7. The audit story

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from core import approvals
+from core.approvals import SelfServeLimit
 from core.errors import InvalidInput
 from core.identity.base import Principal
 from core.money import dollars_to_cents, format_cents
@@ -38,6 +39,18 @@ def risk_level(payload: dict, cfg: dict) -> str:
     if amount <= int(cfg["high_above_cents"]):
         return "elevated"
     return "high"
+
+
+def self_serve_limits(cfg: dict) -> list[SelfServeLimit]:
+    limits = cfg.get("self_serve_limits") or {}
+    out = []
+    if "per_transaction_cents" in limits:
+        out.append(SelfServeLimit("Refunds on this payment", int(limits["per_transaction_cents"]),
+                                  group=lambda p: p["transaction_id"]))
+    if "per_requester_daily_cents" in limits:
+        out.append(SelfServeLimit("Your refunds in the last 24 hours", int(limits["per_requester_daily_cents"]),
+                                  window_hours=24, per_requester=True))
+    return out
 
 
 def describe(payload: dict) -> str:
