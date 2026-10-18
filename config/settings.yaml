@@ -15,6 +15,7 @@ storage:
 # Adding an app: a new folder under apps/, one line here, and its roles in policy.yaml.
 installed_apps:
   - refunds
+  - flags
 
 apps:
   refunds:
@@ -28,3 +29,11 @@ apps:
     self_serve_limits:
       per_transaction_cents: 50000     # all self-approved refunds on one payment, ever
       per_requester_daily_cents: 100000  # one person's self-approved refunds in 24 hours
+  flags:
+    color: purple
+    approver_label: engineering lead
+    environments:                      # key -> label shown to people, in display order
+      test: Test environment
+      production: Real customers
+    production_environment: production
+    full_rollout_percent: 100          # on at this rollout in production is high risk

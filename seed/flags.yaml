@@ -1,0 +1,20 @@
+# Mock feature flag service. Each flag has a test and a production environment.
+flags:
+  - id: instant-payouts
+    name: Instant payouts
+    description: Same-day payouts to merchants
+    environments:
+      test:       {enabled: false, rollout_percent: 0}
+      production: {enabled: false, rollout_percent: 0}
+  - id: new-checkout
+    name: New checkout
+    description: Redesigned checkout for card payments
+    environments:
+      test:       {enabled: true, rollout_percent: 100}
+      production: {enabled: true, rollout_percent: 25}
+  - id: kyc-v2-scoring
+    name: KYC v2 scoring
+    description: New identity-risk scoring model
+    environments:
+      test:       {enabled: true, rollout_percent: 50}
+      production: {enabled: false, rollout_percent: 0}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Feature flags · {{ settings.platform_name }}{% endblock %}
+{% block content %}
+<style>
+  .flag-change { display: flex; gap: .4rem; align-items: center; margin: .4rem 0 0; }
+  .flag-change input[type=number] { width: 5.5rem; margin: 0; padding: .2rem .4rem; height: auto; }
+  .flag-change label { margin: 0; white-space: nowrap; }
+  .flag-change button { padding: .2rem .6rem; margin: 0; width: auto; font-size: .85rem; }
+  article.flash { padding: .7rem 1rem; }
+  article.flash.ok { border-left: 4px solid #2e7d32; }
+  article.flash.pending { border-left: 4px solid #b58100; background: #fff8e1; }
+  article.flash.bad { border-left: 4px solid #c62828; }
+</style>
+<h1>Feature flags</h1>
+
+{% if flash %}
+<article class="flash {{ flash.kind }}"><strong>{{ flash.text }}</strong>{% if flash.detail %}<br><small>{{ flash.detail }}</small>{% endif %}</article>
+{% endif %}
+
+<section id="flags-table" data-live="/apps/flags">
+  <table>
+    <thead><tr><th>Flag</th>{% for env, label in environments.items() %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in rows %}
+    <tr>
+      <td><strong>{{ row.flag.name }}</strong><br><small class="muted">{{ row.flag.description }}</small></td>
+      {% for cell in row.cells %}
+      <td>
+        {% if cell.state %}
+        <strong class="{{ 'ok' if cell.state.enabled else 'muted' }}">{{ "On" if cell.state.enabled else "Off" }}</strong>
+        · {{ cell.state.rollout_percent }}% of customers
+        {% if cell.pending %}
+        <br><span class="chip pending">Pending</span> <small>{{ cell.pending.description.split(" → ")[-1] }} · {{ cell.pending.progress }}</small>
+        {% endif %}
+        {% if can_change %}
+        <form method="post" action="/apps/flags/changes" class="flag-change">
+          <input type="hidden" name="flag" value="{{ row.flag.key }}">
+          <input type="hidden" name="environment" value="{{ cell.env }}">
+          <input type="hidden" name="idempotency_key" value="{{ cell.key }}">
+          <label><input type="checkbox" name="enabled" value="on" {% if cell.state.enabled %}checked{% endif %}> On</label>
+          <input type="number" name="rollout_percent" value="{{ cell.state.rollout_percent }}" aria-label="Percent of customers">%
+          <button type="submit">Apply change</button>
+        </form>
+        {% endif %}
+        {% else %}<span class="muted">—</span>{% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section id="flags-requests" data-live="/apps/flags">
+  <h3>Change requests</h3>
+  {% if requests %}
+  <table>
+    <thead><tr><th>#</th><th>Change</th><th>Risk</th><th>Signatures</th><th>Status</th><th>Requester</th><th></th></tr></thead>
+    <tbody>
+    {% for r in requests %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.description }}</td>
+      <td class="risk-{{ r.risk }}">{{ r.risk }}</td>
+      <td>{{ r.progress }}</td>
+      <td><span class="chip {{ r.status }}">{{ r.status_text }}</span></td>
+      <td>{{ r.requester_name }}</td>
+      <td>{% with next_url="/apps/flags" %}{% include "_approval_actions.html" %}{% endwith %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No flag changes yet.</p>{% endif %}
+</section>
+{% endblock %}

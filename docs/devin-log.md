@@ -52,3 +52,18 @@ One row per session. Wall-clock and ACUs are filled in by the human reviewer.
 - **Walkthrough:** scene 5 in the browser after a reset: Amy $1,800 on TX-1005 → Mark signs (still pending, nothing paid) → Sue signs from her inbox → paid.
 - **Went wrong / caught:** see the pull request description.
 - **Wall-clock / ACUs:**
+
+## Session 3: Feature flags (second app)
+- **Task:** build the second internal tool by following `playbooks/new-internal-app.md` and `AGENTS.md`. Spec saved as `docs/specs/feature-flags.md`. Rule: don't modify any existing `core/` file.
+- **Built:**
+  - `apps/flags/`: four checks (flag exists, environment exists, rollout 0–100, actually changes something), risk from config (test → low, production → elevated, production on at full rollout → high), UI and API.
+  - `core/connectors/flags_mock.py` (new file): `FlagServiceConnector` protocol + `FlagsMock`, a `MockSystem` that keeps state in `data/ledger.db` and seeds from `seed/flags.yaml` on first use. The app brings it via `AppManifest.connectors`, so `reset_all` covers it.
+  - The app declares nothing about approvals or compliance. "engineering lead, then compliance" comes from `policy.yaml` (`high: [app_approver, compliance_cosigner]`) and the existing signer types.
+- **Files changed:**
+  - New: `apps/flags/__init__.py`, `apps/flags/checks.py`, `apps/flags/manifest.py`, `apps/flags/routes.py`, `apps/flags/service.py`, `core/connectors/flags_mock.py`, `templates/flags/index.html`, `seed/flags.yaml`, `tests/fixtures/flags.yaml`, `tests/test_flags.py`, `docs/specs/feature-flags.md`
+  - Edited: `config/policy.yaml`, `config/settings.yaml`, `seed/users.yaml`, `tests/fixtures/users.yaml`, `README.md`, `docs/demo-walkthrough.md` (scenes 6 and 7), `docs/devin-log.md`
+- **No existing core file was modified:** the only change under `core/` is the new `core/connectors/flags_mock.py`.
+- **Tests:** `make test` → 85 passed (72 before + 13 in `tests/test_flags.py`).
+- **Walkthrough:** scenes 6–7 in the browser after a reset. Paul's test-environment change applied. His real-customers change said "Sent for approval: engineering lead, then compliance". Kate signed it, and Amy's $1,800 refund was signed by Mark. Sue's inbox held both (teal Refunds, purple Feature flags). She signed both. The audit log showed both apps in one list.
+- **Wall-clock / ACUs:**
+
