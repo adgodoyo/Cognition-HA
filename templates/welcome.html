@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ settings.platform_name }}</h1>
+<p class="muted">Internal apps on one shared platform for identity, checks, approvals, connectors and audit.</p>
+<div class="tiles">
+  <a class="tile" href="/signin" style="background: #1565c0">
+    <strong>Sign in</strong><br><small>Open your apps, inbox and approvals.</small>
+  </a>
+  <a class="tile" href="/platform" style="background: #37474f">
+    <strong>Platform</strong><br><small>What the platform provides, who can do what, approval rules. No sign-in needed.</small>
+  </a>
+</div>
+{% if apps %}
+<h3>Installed apps</h3>
+<ul>{% for m in apps %}<li><strong>{{ m.title }}</strong>: {{ m.description }}</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

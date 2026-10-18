@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Sign in · {{ settings.platform_name }}{% endblock %}
+{% block content %}
+<h1>Sign in to {{ settings.platform_name }}</h1>
+{% if settings.demo_mode %}
+<p class="banner">Demo identity provider. In production this is your company's Microsoft Entra ID single sign-on; the app receives the same identity, name and role.</p>
+{% for department, people in groups.items() %}
+<h3>{{ department }}</h3>
+<div class="grid">
+  {% for card in people %}
+  <article>
+    <header class="person">
+      <span class="avatar">{{ card.p.initials }}</span>
+      <div><strong>{{ card.p.name }}</strong><br><small class="muted">{{ card.p.title }} · {{ card.p.department }}</small></div>
+    </header>
+    <p><strong>Can</strong></p>
+    <ul>{% for c in card.can %}<li>{{ c }}</li>{% else %}<li class="muted">Nothing yet</li>{% endfor %}</ul>
+    <p><strong>Cannot</strong></p>
+    <ul>{% for c in card.cannot %}<li class="muted">{{ c }}</li>{% else %}<li class="muted">Nothing on this platform</li>{% endfor %}</ul>
+    <footer>
+      <form method="post" action="/signin" class="inline">
+        <input type="hidden" name="username" value="{{ card.p.username }}">
+        <button>Sign in as {{ card.p.name.split()[0] }}</button>
+      </form>
+    </footer>
+  </article>
+  {% endfor %}
+</div>
+{% endfor %}
+{% else %}
+<p class="banner">Sign-in goes through your company's single sign-on (Microsoft Entra ID). It is not configured in this environment; see <code>core/identity/entra_oidc.py</code>.</p>
+{% endif %}
+{% endblock %}

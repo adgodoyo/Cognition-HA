@@ -1,0 +1,19 @@
+{# Sign / Reject buttons. Enabled only when the core's can_sign says so; the server re-checks anyway. #}
+{% if r.status == "pending" %}
+  <form method="post" action="/approvals/{{ r.id }}/sign" class="inline">
+    <input type="hidden" name="next" value="{{ next_url }}">
+    <button {% if not r.can_sign %}disabled{% endif %}>{{ sign_label or "Sign" }}</button>
+  </form>
+  <form method="post" action="/approvals/{{ r.id }}/reject" class="inline">
+    <input type="hidden" name="next" value="{{ next_url }}">
+    <input type="text" name="reason" placeholder="Reason" {% if not r.can_sign %}disabled{% endif %}>
+    <button class="secondary" {% if not r.can_sign %}disabled{% endif %}>Reject</button>
+  </form>
+  {% if not r.can_sign %}<small class="reason">{{ r.can_sign_reason }}</small>{% endif %}
+{% elif r.status == "rejected" %}
+  <small class="reason">Reason: {{ r.reject_reason }}</small>
+{% elif r.status == "failed" %}
+  <small class="reason">{{ r.error }}</small>
+{% elif r.result and r.result.payout %}
+  <small class="reason">Payout {{ r.result.payout.id }}</small>
+{% endif %}

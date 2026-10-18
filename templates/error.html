@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ error.status }} · {{ settings.platform_name }}{% endblock %}
+{% block content %}
+<article class="refusal{% if error.status < 500 %} refusal-denied{% endif %}">
+  <header><strong>{{ error.status }} · {{ error.code }}</strong></header>
+  <p>{{ error.message }}</p>
+  {% if error.extra.failed_checks %}
+  <ul>{% for c in error.extra.failed_checks %}<li><span class="bad">✗</span> {{ c.label }}: {{ c.detail }}</li>{% endfor %}</ul>
+  {% endif %}
+  <footer><a href="javascript:history.back()">Go back</a> · <a href="/">Home</a></footer>
+</article>
+{% endblock %}
