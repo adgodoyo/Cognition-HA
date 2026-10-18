@@ -161,9 +161,3 @@ def test_a_leads_own_production_change_is_signed_by_another_lead(client, platfor
     assert sign(client, platform, rid, "lead_a").status_code == 403
     assert sign(client, platform, rid, "lead_b").json()["status"] == "executed"
 
-
-def test_demo_seed_has_a_second_lead_for_each_leads_own_changes():
-    import yaml
-    from pathlib import Path
-    users = yaml.safe_load((Path(__file__).resolve().parent.parent / "seed" / "users.yaml").read_text())["users"]
-    assert sum(u["role"] == "eng_lead" for u in users) >= 2

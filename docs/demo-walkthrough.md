@@ -36,7 +36,7 @@ Run this scene on its own from a reset (Platform → **Reset demo data**). Scene
 - Nothing under `apps/` changed for this. The rule is one line in `config/policy.yaml` (`high: [app_approver, compliance_cosigner]`) plus the `compliance_cosigner` signer type in `core/approvals.py`. The Platform page's approval table and the sign-in cards picked it up from `policy.yaml`.
 
 ## 6. A second app: feature flags
-Start from a reset (Platform → **Reset demo data**). The new app comes with two engineering leads, **Paul Reed** and **Kate Hall**. Each can request flag changes and sign the other's production changes (nobody signs their own).
+Start from a reset (Platform → **Reset demo data**). The new app comes with two new people, mirroring Operations: **Paul Reed** (software engineer, can request changes, like Amy) and **Kate Hall** (engineering lead, approves production changes, like Mark).
 - Sign in as **Paul** and open **Feature flags**. The table has one row per flag and two columns, **Test environment** and **Real customers**. Each cell shows On/Off and "% of customers", plus a small change form.
 - In the **Instant payouts** row, under *Test environment*: tick **On**, set `100`, click **Apply change**. The page shows **"Applied: Instant payouts: Test environment → on at 100%"** and the cell updates. Low risk applies right away, but it's still in the audit log.
 - Do the same under *Real customers*. The page says **"Sent for approval: engineering lead, then compliance"**. The cell keeps its current value (**Off · 0%**), with a yellow **Pending** chip and `0 of 2: engineering lead, compliance`. Turning a flag fully on for real customers is high risk. The app only declared "high"; the compliance step comes from `config/policy.yaml`.
