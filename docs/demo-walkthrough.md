@@ -36,10 +36,11 @@ Run this scene on its own from a reset (Platform → **Reset demo data**). Scene
 - Nothing under `apps/` changed for this. The rule is one line in `config/policy.yaml` (`high: [app_approver, compliance_cosigner]`) plus the `compliance_cosigner` signer type in `core/approvals.py`. The Platform page's approval table and the sign-in cards picked it up from `policy.yaml`.
 
 ## 6. A second app: feature flags
-Start from a reset (Platform → **Reset demo data**). The new app comes with new people: **Paul Reed** (software engineer) and **Kate Hall** (engineering lead).
+Start from a reset (Platform → **Reset demo data**). The new app comes with new people: **Paul Reed** (software engineer) and two engineering leads, **Kate Hall** and **Nina Cole**. There are two leads so that a lead's own production change has someone else to sign it.
 - Sign in as **Paul** and open **Feature flags**. The table has one row per flag and two columns, **Test environment** and **Real customers**. Each cell shows On/Off and "% of customers", plus a small change form.
 - In the **Instant payouts** row, under *Test environment*: tick **On**, set `100`, click **Apply change**. The page shows **"Applied: Instant payouts: Test environment → on at 100%"** and the cell updates. Low risk applies right away, but it's still in the audit log.
 - Do the same under *Real customers*. The page says **"Sent for approval: engineering lead, then compliance"**. The cell keeps its current value (**Off · 0%**), with a yellow **Pending** chip and `0 of 2: engineering lead, compliance`. Turning a flag fully on for real customers is high risk. The app only declared "high"; the compliance step comes from `config/policy.yaml`.
+- While it's pending, a second change to the same flag and environment is refused by the check *No other change is waiting for this flag and environment*.
 - Sign out, sign in as **Kate**. Her inbox shows **"Instant payouts: Real customers → on at 100%"** (purple Feature flags tag). Click **Sign**: `1 of 2: engineering lead ✓, compliance`, still pending.
 
 ## 7. One compliance inbox, one audit log, two apps

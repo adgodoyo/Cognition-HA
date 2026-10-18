@@ -144,3 +144,26 @@ def test_reset_restores_flags_from_seed(client, platform):
     assert client.post("/admin/reset", follow_redirects=False).status_code == 303
     assert state(platform, "test").enabled is False
     assert flags(platform).change_count() == 0
+
+
+def test_a_second_change_while_one_is_pending_fails_its_check(client, platform):
+    first = change(client, platform, "eng_a", "production", True, 30).json()
+    assert first["status"] == "pending"
+    assert _failed(change(client, platform, "lead_a", "production", True, 60)) == {"pending"}
+    # Other environments and other flags are unaffected.
+    assert change(client, platform, "eng_a", "test", True, 30).json()["status"] == "executed"
+    sign(client, platform, first["id"], "lead_a")
+    assert change(client, platform, "eng_a", "production", False, 0).json()["status"] == "pending"
+
+
+def test_a_leads_own_production_change_is_signed_by_another_lead(client, platform):
+    rid = change(client, platform, "lead_a", "production", True, 30).json()["id"]
+    assert sign(client, platform, rid, "lead_a").status_code == 403
+    assert sign(client, platform, rid, "lead_b").json()["status"] == "executed"
+
+
+def test_demo_seed_has_a_second_lead_for_each_leads_own_changes():
+    import yaml
+    from pathlib import Path
+    users = yaml.safe_load((Path(__file__).resolve().parent.parent / "seed" / "users.yaml").read_text())["users"]
+    assert sum(u["role"] == "eng_lead" for u in users) >= 2

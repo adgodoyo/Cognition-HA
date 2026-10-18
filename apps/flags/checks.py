@@ -50,10 +50,21 @@ def changes_something(payload: dict, ctx: Ctx) -> CheckResult:
     return CheckResult(True, f"Changes it from {now} to {state_text(*wanted)}.")
 
 
+def nothing_pending(payload: dict, ctx: Ctx) -> CheckResult:
+    same = [r for r in ctx.open_requests
+            if r["payload"].get("flag") == payload.get("flag")
+            and r["payload"].get("environment") == payload.get("environment")]
+    if same:
+        return CheckResult(False, "Another change to this flag in this environment is already waiting for signatures. "
+                                  "Wait for it to be signed or rejected first.")
+    return CheckResult(True, "No other change to this flag in this environment is waiting.")
+
+
 def build_checks() -> list[Check]:
     return [
         Check("flag", "The flag exists", flag_exists),
         Check("environment", "The environment exists", environment_exists),
         Check("rollout", "Rollout is between 0 and 100%", rollout_in_range),
         Check("changes", "The change actually changes something", changes_something),
+        Check("pending", "No other change is waiting for this flag and environment", nothing_pending),
     ]
