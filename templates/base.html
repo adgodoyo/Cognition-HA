@@ -31,7 +31,9 @@
     details pre { font-size: .75rem; margin: 0; }
     .banner { background: #eef6ff; border-left: 4px solid #2563eb; padding: .75rem 1rem; border-radius: .25rem; }
     small.reason { display: block; color: var(--pico-muted-color); }
-  </style>
+    article.refusal-denied { border-left: 4px solid #c62828; background: #fdecea; }
+  article.refusal-denied header { color: #c62828; background: transparent; }
+</style>
 </head>
 <body>
 <header class="top container">
@@ -40,7 +42,7 @@
       <li><a href="/" class="brand contrast">{{ settings.platform_name }}</a></li>
       {% for m in nav_apps %}<li><a href="{{ m.nav_path }}">{{ m.title }}</a></li>{% endfor %}
       {% if principal %}<li><a href="/inbox">Inbox</a></li>{% endif %}
-      {% if can_read_audit %}<li><a href="/audit">Audit log</a></li>{% endif %}
+      {% if principal %}<li><a href="/audit"{% if not can_read_audit %} class="muted" title="Your role can't read the audit log"{% endif %}>Audit log</a></li>{% endif %}
       <li><a href="/platform">Platform</a></li>
     </ul>
     <ul>

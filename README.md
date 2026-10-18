@@ -49,7 +49,7 @@ All endpoints take `Authorization: Bearer <token>` or the session cookie. Errors
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/me` | current principal |
-| POST | `/api/refunds/preview` | runs the checks and computes risk. No side effects besides audit |
+| POST | `/api/refunds/preview` | runs the checks and computes risk. Writes nothing |
 | POST | `/api/refunds` | requires the `Idempotency-Key` header |
 | POST | `/api/approvals/{id}/sign` | 403 `self_approval_forbidden` / `forbidden`, 409 `already_signed` / `already_decided` |
 | POST | `/api/approvals/{id}/reject` | requires a reason |

@@ -1,6 +1,6 @@
 import pytest
 
-from conftest import sign_in
+from conftest import audit_rows, sign_in
 
 
 def test_platform_page_is_public(client):
@@ -42,11 +42,13 @@ def test_home_shows_identity_and_waiting_only_to_signers(client, platform):
     assert "Waiting for you" in client.get("/").text
 
 
-def test_nav_hides_audit_link_from_analysts(client):
+def test_nav_shows_audit_link_but_server_refuses_analysts(client):
     sign_in(client, "tester_a")
-    assert 'href="/audit"' not in client.get("/").text
+    assert "Your role can't read the audit log" in client.get("/").text.replace("&#39;", "'")
+    assert client.get("/audit").status_code == 403
     sign_in(client, "boss_a")
-    assert 'href="/audit"' in client.get("/").text
+    assert "Your role can't read the audit log" not in client.get("/").text.replace("&#39;", "'")
+    assert client.get("/audit").status_code == 200
 
 
 def test_payout_counter_on_every_page(client):
@@ -57,3 +59,12 @@ def test_payout_counter_on_every_page(client):
 
 def test_live_request_for_signed_out_page_is_204(client):
     assert client.get("/inbox", headers={"X-Live": "1"}, follow_redirects=False).status_code == 204
+
+
+def test_live_poll_of_a_refused_page_is_not_audited(client, platform):
+    sign_in(client, "tester_a")
+    assert client.get("/audit").status_code == 403
+    before = len(audit_rows(platform))
+    for _ in range(3):
+        assert client.get("/audit", headers={"X-Live": "1"}).status_code == 204
+    assert len(audit_rows(platform)) == before

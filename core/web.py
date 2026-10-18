@@ -86,6 +86,9 @@ def install(app: FastAPI) -> None:
     async def platform_error(request: Request, exc: PlatformError):
         platform = get_platform(request)
         principal = getattr(request.state, "principal", None)
+        # Background live-refresh polls are not user actions: answer "nothing new" and don't audit.
+        if request.headers.get("x-live") and not is_api(request):
+            return Response(status_code=204)
         # Every refusal is audited. A signed-out browser being sent to /signin is navigation, not a refusal.
         if is_api(request) or exc.status != 401:
             audit.record(
@@ -101,7 +104,5 @@ def install(app: FastAPI) -> None:
         if is_api(request):
             return JSONResponse(exc.to_json(), status_code=exc.status)
         if exc.status == 401:
-            if request.headers.get("x-live"):
-                return Response(status_code=204)
             return RedirectResponse("/signin", status_code=303)
         return render(request, "error.html", status_code=exc.status, error=exc)

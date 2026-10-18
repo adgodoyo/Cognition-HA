@@ -11,12 +11,12 @@
   <article>
     <header class="person">
       <span class="avatar">{{ card.p.initials }}</span>
-      <div><strong>{{ card.p.name }}</strong><br><small class="muted">{{ card.p.title }} · {{ card.role_label }}</small></div>
+      <div><strong>{{ card.p.name }}</strong><br><small class="muted">{{ card.p.title }} · {{ card.p.department }}</small></div>
     </header>
     <p><strong>Can</strong></p>
     <ul>{% for c in card.can %}<li>{{ c }}</li>{% else %}<li class="muted">Nothing yet</li>{% endfor %}</ul>
     <p><strong>Cannot</strong></p>
-    <ul>{% for c in card.cannot %}<li class="muted">{{ c }}</li>{% else %}<li class="muted">—</li>{% endfor %}</ul>
+    <ul>{% for c in card.cannot %}<li class="muted">{{ c }}</li>{% else %}<li class="muted">Nothing on this platform</li>{% endfor %}</ul>
     <footer>
       <form method="post" action="/signin" class="inline">
         <input type="hidden" name="username" value="{{ card.p.username }}">

@@ -22,15 +22,20 @@ Start with `make demo` and open http://localhost:8000. `make demo` resets both d
 - In Amy's request table, the sign button is disabled and explains *"You can't sign your own request."* The API returns the same refusal (`403 self_approval_forbidden`).
 
 ## 5. Amy can't read the audit log
-- Click **Audit**. Amy gets a red refusal: her role lacks `audit.read`. The navigation never hides pages, so people can see what they're missing.
+- The **Audit log** link is greyed out for Amy, but she can still click it. She gets a red refusal: *"Your role (Operations analyst) does not have the permission: View the audit log."* The refusal itself goes into the audit log.
 
 ## 6. Mark approves
 - **Sign out**, then sign in as **Mark Evans** (operations manager).
-- **Inbox** shows Amy's $1,200 request with its description, five check results, and **Approve** / **Reject** buttons.
-- Click **Approve**. The request runs its checks again inside the write transaction, then executes once. The counter goes to **Payouts: 2 · $1,250.00**. Amy's open tabs update within a few seconds.
+- **Inbox** shows Amy's $1,200 request with its reason, requester, risk, progress (`0 of 1: manager`), and **Sign** / **Reject** buttons.
+- Click **Sign**. The request runs its checks again inside the write transaction, then executes once. The counter goes to **Payouts: 2 · $1,250.00**. Amy's open tabs update within a few seconds.
 
 ## 7. The audit story
-- Open **Audit** as Mark and filter by app = refunds. Every step has its own row: preview checks, the denied self-signature, Mark's signature, and execution with before/after ledger values. Rows are append-only: the database rejects any `UPDATE` or `DELETE`.
+- Open **Audit log** as Mark. Every step has its own row, newest first:
+  - Amy's $50 request, `executed`, with before/after ledger values.
+  - Amy's $1,200 request, `checked`: all checks passed, now waiting.
+  - Amy's `audit.view` attempt, `denied`, highlighted in red.
+  - Mark's signature, `executed`, with before/after ledger values.
+- Click **Refunds** to filter to that app. Checks in the preview panel are read-only, so they don't write audit rows. Rows are append-only: the database rejects any `UPDATE` or `DELETE`.
 
 ## 8. Platform
 - Open **Platform**. It shows the capability matrix (what the spine provides versus what each app declares), role permissions, approval rules for each risk level, connectors, and how many lines of code the Refunds app needed.

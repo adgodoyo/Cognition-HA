@@ -114,7 +114,8 @@ def inbox(request: Request, principal: Principal = Depends(require_principal),
 def audit_log(request: Request, app: str | None = None, principal: Principal = Depends(require_principal),
               platform: PlatformContext = Depends(get_platform)):
     if not platform.policy.has(principal, "audit.read"):
-        raise Forbidden("The audit log is for oversight roles.", action="audit.view")
+        raise Forbidden(f"Your role ({platform.policy.role_label(principal.role)}) does not have the permission: "
+                        f"{platform.policy.permissions.get('audit.read', 'audit.read')}.", action="audit.view")
     rows = audit.events(platform.db, app=app or None)
     return render(request, "audit.html", rows=rows, app_filter=app or "")
 

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ error.status }} · {{ settings.platform_name }}{% endblock %}
 {% block content %}
-<article>
+<article class="refusal{% if error.status < 500 %} refusal-denied{% endif %}">
   <header><strong>{{ error.status }} · {{ error.code }}</strong></header>
   <p>{{ error.message }}</p>
   {% if error.extra.failed_checks %}
