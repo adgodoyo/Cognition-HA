@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Audit log · {{ settings.platform_name }}{% endblock %}
+{% block content %}
+<h1>Audit log</h1>
+<p>Append-only: the database refuses updates and deletes. Newest first.</p>
+<nav>
+  <ul>
+    <li><strong>App:</strong></li>
+    <li><a href="/audit" {% if not app_filter %}aria-current="page"{% endif %}>All</a></li>
+    {% for m in platform.apps.values() %}
+    <li><a href="/audit?app={{ m.name }}" {% if app_filter == m.name %}aria-current="page"{% endif %}>{{ m.title }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>
+<div id="audit-rows" data-live>
+<table>
+  <thead><tr><th>#</th><th>When</th><th>Actor</th><th>App</th><th>Action</th><th>Entity</th><th>Outcome</th><th>Details</th></tr></thead>
+  <tbody>
+  {% for e in rows %}
+  <tr class="{{ e.outcome }}">
+    <td>{{ e.id }}</td>
+    <td><small>{{ e.ts }}</small></td>
+    <td>{{ e.actor }}<br><small class="muted">{{ e.role or "" }}</small></td>
+    <td>{% if e.app and e.app in platform.apps %}<span class="apptag" style="background: {{ platform.apps[e.app].color }}">{{ platform.apps[e.app].title }}</span>{% else %}{{ e.app or "—" }}{% endif %}</td>
+    <td>{{ e.action }}</td>
+    <td>{{ e.entity or "" }}</td>
+    <td><strong>{{ e.outcome }}</strong></td>
+    <td>
+      {% set d = e.detail or {} %}
+      {{ d.get("description") or d.get("message") or "" }}
+      {% for label, value in [("Before", e.before), ("After", e.after), ("Detail", e.detail)] %}
+        {% if value %}<details><summary><small>{{ label }}</small></summary><pre>{{ value|tojson(indent=2) }}</pre></details>{% endif %}
+      {% endfor %}
+      <small class="muted">request {{ e.request_id or "—" }}</small>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8" class="muted">No events yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

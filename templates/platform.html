@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Platform · {{ settings.platform_name }}{% endblock %}
+{% block content %}
+<hgroup>
+  <h1>Platform</h1>
+  <p>What Power Apps gives you, rebuilt once. Every app inherits these layers; none re-implements them.</p>
+</hgroup>
+
+<h3>1. Capabilities × apps</h3>
+<table>
+  <thead><tr><th>Capability</th><th>Implemented in</th>
+    {% for m in apps %}<th><span class="apptag" style="background: {{ m.color }}">{{ m.title }}</span></th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for row in capabilities %}
+  <tr><td>{{ row.c.name }}</td><td><code>{{ row.c.implemented_in }}</code></td>
+    {% for m in apps %}<td>{% if row.apps[m.name] %}<span class="ok">✓</span>{% else %}<span class="muted">—</span>{% endif %}</td>{% endfor %}</tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>2. Permissions by role</h3>
+{% set groups = platform.policy.permission_groups() %}
+<table>
+  <thead>
+    <tr><th rowspan="2">Role</th>
+      {% for prefix, perms in groups %}
+      <th colspan="{{ perms|length }}" style="{% if prefix in app_colors %}background: {{ app_colors[prefix] }}; color: #fff{% endif %}">
+        {{ platform.apps[prefix].title if prefix in platform.apps else "Platform" }}</th>
+      {% endfor %}</tr>
+    <tr>{% for prefix, perms in groups %}{% for p in perms %}<th><small>{{ platform.policy.permissions[p] }}</small></th>{% endfor %}{% endfor %}</tr>
+  </thead>
+  <tbody>
+  {% for key, role in platform.policy.roles.items() %}
+  <tr><td>{{ role.label }}</td>
+    {% for prefix, perms in groups %}{% for p in perms %}<td>{% if p in role.permissions %}<span class="ok">✓</span>{% else %}<span class="muted">—</span>{% endif %}</td>{% endfor %}{% endfor %}</tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>3. Approval requirements by risk</h3>
+<p class="muted">Read live from <code>config/policy.yaml</code>. Signatures are collected in order.</p>
+<table>
+  <thead><tr><th>Risk</th><th>Signer types</th>{% for m in apps %}<th>{{ m.title }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for r in requirements %}
+  <tr><td class="risk-{{ r.level }}">{{ r.level }}</td>
+    <td>{% if r.steps %}<code>{{ r.steps|join(" → ") }}</code>{% else %}<span class="muted">none</span>{% endif %}</td>
+    {% for m in apps %}<td>{{ r.per_app[m.name] }}</td>{% endfor %}</tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>4. Connectors</h3>
+<div id="platform-connectors" data-live>
+<table>
+  <thead><tr><th>Connector</th><th>Mode</th><th>Used by</th><th>State</th></tr></thead>
+  <tbody>
+  {% for c in connectors %}
+  <tr><td><code>{{ c.name }}</code></td><td>{{ c.mode }}</td><td>{{ c.used_by|join(", ") or "—" }}</td>
+    <td>{% for k, v in c.stats.items() %}{{ k }}: <strong>{{ v }}</strong>{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h3>5. Lines of code</h3>
+<p class="muted">Counted at startup (non-blank, non-comment Python).</p>
+<table>
+  <thead><tr><th>Module</th><th>Lines</th></tr></thead>
+  <tbody>
+  {% for r in platform.loc_stats if r.group == "core" %}<tr><td><code>{{ r.module }}</code></td><td>{{ r.lines }}</td></tr>{% endfor %}
+  <tr><td><strong>core/ total (shared by every app)</strong></td><td><strong>{{ core_total }}</strong></td></tr>
+  {% for r in platform.loc_stats if r.group != "core" %}
+  <tr><td><span class="apptag" style="background: {{ app_colors.get(r.group, 'gray') }}">{{ r.module }}</span></td><td><strong>{{ r.lines }}</strong></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if settings.demo_mode %}
+<h3>6. Demo data</h3>
+<form method="post" action="/admin/reset" onsubmit="return confirm('Reset all demo data? This replaces both databases and signs everyone out.');">
+  <button class="secondary">Reset demo data</button>
+</form>
+{% endif %}
+{% endblock %}

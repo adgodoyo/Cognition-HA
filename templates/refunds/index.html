@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Refunds · {{ settings.platform_name }}{% endblock %}
+{% block content %}
+<h1>Refunds</h1>
+{% if can_request %}
+<article>
+  <form method="post" action="/apps/refunds/check">
+    <input type="hidden" name="idempotency_key" value="{{ form.idempotency_key }}">
+    <div class="grid">
+      <label>Transaction ID <input name="transaction_id" value="{{ form.transaction_id }}" required></label>
+      <label>Customer email <input name="customer_email" type="email" value="{{ form.customer_email }}" required></label>
+      <label>Amount (USD) <input name="amount" inputmode="decimal" value="{{ form.amount }}" placeholder="0.00" required></label>
+    </div>
+    <label>Reason <input name="reason" value="{{ form.reason }}" placeholder="Why is this refund needed?"></label>
+    <div class="grid">
+      <button type="submit" class="secondary">Check against ledger</button>
+      <button type="submit" formaction="/apps/refunds" {% if not (preview and preview.all_passed) %}disabled{% endif %}>Submit request</button>
+    </div>
+  </form>
+
+  {% if preview %}
+  <section id="refund-check">
+    <h4>Ledger record</h4>
+    {% if preview.transaction %}
+    <table>
+      <tr><th>Customer</th><td>{{ preview.transaction.customer_name }}</td>
+          <th>Amount paid</th><td>{{ preview.transaction.amount_cents|money }}</td></tr>
+      <tr><th>Status</th><td>{{ preview.transaction.status }}</td>
+          <th>Already refunded</th><td>{{ preview.transaction.refunded_cents|money }}</td></tr>
+    </table>
+    {% else %}<p class="bad">No such transaction in the ledger.</p>{% endif %}
+    <h4>Checks</h4>
+    <table>
+      {% for c in preview.checks %}
+      <tr><td>{% if c.passed %}<span class="ok">✓</span>{% else %}<span class="bad">✗</span>{% endif %}</td><td>{{ c.label }}</td><td>{{ c.detail }}</td></tr>
+      {% endfor %}
+    </table>
+    <p><strong>Risk:</strong> <span class="risk-{{ preview.risk }}">{{ preview.risk }}</span>, {{ preview.needs }}.
+      {% if not preview.all_passed %}<span class="bad">Fix the failed checks to submit.</span>{% endif %}</p>
+  </section>
+  {% endif %}
+</article>
+{% endif %}
+
+<section id="refunds-requests" data-live="/apps/refunds">
+  <h3>Refund requests</h3>
+  {% if rows %}
+  <table>
+    <thead><tr><th>#</th><th>Transaction</th><th>Amount</th><th>Risk</th><th>Signatures</th><th>Status</th><th>Requester</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.payload.transaction_id }}</td>
+      <td>{{ r.payload.amount_cents|money }}</td>
+      <td class="risk-{{ r.risk }}">{{ r.risk }}</td>
+      <td>{{ r.progress }}</td>
+      <td><span class="chip {{ r.status }}">{{ r.status_text }}</span></td>
+      <td>{{ r.requester_name }}</td>
+      <td>{% with next_url="/apps/refunds", sign_label="Approve" %}{% include "_approval_actions.html" %}{% endwith %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No refund requests yet.</p>{% endif %}
+</section>
+{% endblock %}

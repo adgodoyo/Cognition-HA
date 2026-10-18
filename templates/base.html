@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ settings.platform_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    :root { --pico-font-size: 95%; }
+    header.top { border-bottom: 1px solid var(--pico-muted-border-color); margin-bottom: 1.5rem; }
+    header.top nav { flex-wrap: wrap; }
+    .brand { font-weight: 700; }
+    .chip { display: inline-block; padding: .1rem .55rem; border-radius: 1rem; font-size: .8rem; background: #eef1f4; white-space: nowrap; }
+    .chip.pending, .chip.approved { background: #fff4d6; color: #7a5300; }
+    .chip.executed { background: #dcf5e7; color: #14532d; }
+    .chip.failed, .chip.rejected { background: #fde2e1; color: #8a1c1c; }
+    .apptag { display: inline-block; padding: .05rem .5rem; border-radius: .3rem; color: #fff; font-size: .75rem; font-weight: 600; }
+    .risk-low { color: #14532d; } .risk-elevated { color: #8a5a00; } .risk-high { color: #8a1c1c; font-weight: 600; }
+    .avatar { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: #334155; color: #fff; font-weight: 700; }
+    .person { display: flex; align-items: center; gap: .5rem; }
+    .payouts { font-variant-numeric: tabular-nums; }
+    .muted { color: var(--pico-muted-color); }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+    tr.denied td, tr.failed td { background: #fde8e8; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; }
+    .tile { border-radius: .5rem; padding: 1rem; color: #fff; text-decoration: none; display: block; }
+    .tile.noaccess { opacity: .35; filter: grayscale(.6); pointer-events: none; }
+    .inline { display: inline; margin: 0; }
+    .inline button, .inline input { width: auto; margin: 0; padding: .25rem .6rem; font-size: .85rem; }
+    td form.inline input[type=text] { max-width: 9rem; }
+    details pre { font-size: .75rem; margin: 0; }
+    .banner { background: #eef6ff; border-left: 4px solid #2563eb; padding: .75rem 1rem; border-radius: .25rem; }
+    small.reason { display: block; color: var(--pico-muted-color); }
+  </style>
+</head>
+<body>
+<header class="top container">
+  <nav>
+    <ul>
+      <li><a href="/" class="brand contrast">{{ settings.platform_name }}</a></li>
+      {% for m in nav_apps %}<li><a href="{{ m.nav_path }}">{{ m.title }}</a></li>{% endfor %}
+      {% if principal %}<li><a href="/inbox">Inbox</a></li>{% endif %}
+      {% if can_read_audit %}<li><a href="/audit">Audit log</a></li>{% endif %}
+      <li><a href="/platform">Platform</a></li>
+    </ul>
+    <ul>
+      <li class="payouts" id="payouts" data-live><small>Payouts: {{ payout_count }} · {{ payout_total|money }}</small></li>
+      {% if principal %}
+      <li>
+        <details class="dropdown">
+          <summary><span class="person"><span class="avatar" style="width:1.8rem;height:1.8rem;font-size:.75rem">{{ principal.initials }}</span>{{ principal.name }}</span></summary>
+          <ul dir="rtl">
+            <li><small class="muted">{{ role_label }}</small></li>
+            {% if settings.demo_mode %}<li><a href="/signin">Switch user</a></li>{% endif %}
+            <li><form method="post" action="/signout" class="inline"><button class="secondary outline">Sign out</button></form></li>
+          </ul>
+        </details>
+      </li>
+      {% else %}
+      <li><a href="/signin">Sign in</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</header>
+<main class="container">
+{% block content %}{% endblock %}
+</main>
+<script>
+// Live updates: regions marked data-live refresh from the server. The server stays the
+// source of truth; this only swaps in freshly rendered HTML. data-live="/path" names the
+// page to fetch; empty means the current page.
+(function () {
+  const every = {{ settings.live_refresh_seconds }} * 1000;
+  function paused() {
+    const el = document.activeElement;
+    if (el && el.matches('input, textarea, select')) return true;
+    return !!document.querySelector('[data-live] details[open], dialog[open], header details[open]');
+  }
+  async function refresh() {
+    const regions = Array.from(document.querySelectorAll('[data-live][id]'));
+    if (!regions.length || paused() || document.hidden) return;
+    const bySource = {};
+    regions.forEach(el => { const src = el.dataset.live || location.pathname + location.search; (bySource[src] = bySource[src] || []).push(el); });
+    for (const [src, els] of Object.entries(bySource)) {
+      try {
+        const res = await fetch(src, { headers: { 'X-Live': '1' }, credentials: 'same-origin' });
+        if (!res.ok || res.status === 204 || res.redirected) continue;
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        if (paused()) return;
+        els.forEach(el => { const fresh = doc.getElementById(el.id); if (fresh && fresh.innerHTML !== el.innerHTML) el.innerHTML = fresh.innerHTML; });
+      } catch (e) { /* offline or restarting: try again next tick */ }
+    }
+  }
+  setInterval(refresh, every);
+})();
+</script>
+</body>
+</html>
