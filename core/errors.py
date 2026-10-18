@@ -51,7 +51,7 @@ class SelfApprovalForbidden(PlatformError):
 
 
 class AlreadySigned(PlatformError):
-    status, code = 403, "already_signed"
+    status, code = 409, "already_signed"
     default_message = "You already signed this request."
 
 

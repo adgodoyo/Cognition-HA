@@ -27,7 +27,12 @@ class Policy:
         self.approval_requirements: dict[str, list[str]] = {
             level: list(steps or []) for level, steps in (raw.get("approval_requirements") or {}).items()
         }
+        self.app_names: frozenset[str] = frozenset()
         self._validate()
+
+    def bind_apps(self, names) -> None:
+        """Lets permission_groups tell app permissions from platform-wide ones."""
+        self.app_names = frozenset(names)
 
     def _validate(self) -> None:
         for role in self.roles.values():
@@ -77,8 +82,12 @@ class Policy:
         return list(self.approval_requirements[risk])
 
     def permission_groups(self) -> list[tuple[str, list[str]]]:
-        """Permissions grouped by prefix (the app they belong to), in declaration order."""
+        """Permissions grouped by app, in declaration order. Prefixes that aren't apps
+        (audit, compliance, ...) share one "platform" group."""
         groups: dict[str, list[str]] = {}
         for permission in self.permissions:
-            groups.setdefault(permission.split(".", 1)[0], []).append(permission)
+            prefix = permission.split(".", 1)[0]
+            if self.app_names and prefix not in self.app_names:
+                prefix = "platform"
+            groups.setdefault(prefix, []).append(permission)
         return list(groups.items())

@@ -40,6 +40,7 @@ def load_apps(settings) -> list[AppManifest]:
 def validate(platform) -> None:
     """Fail fast on configuration that doesn't line up."""
     policy = platform.policy
+    policy.bind_apps(platform.apps)
     for m in platform.apps.values():
         for permission in m.permissions:
             if permission not in policy.permissions:
