@@ -1,0 +1,14 @@
+# Test-only flags (never the demo seed).
+flags:
+  - id: flag-off
+    name: Fixture Flag Off
+    description: Off everywhere
+    environments:
+      test:       {enabled: false, rollout_percent: 0}
+      production: {enabled: false, rollout_percent: 0}
+  - id: flag-partial
+    name: Fixture Flag Partial
+    description: Partly rolled out
+    environments:
+      test:       {enabled: true, rollout_percent: 100}
+      production: {enabled: true, rollout_percent: 25}
